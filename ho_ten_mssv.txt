@@ -1,0 +1,6 @@
+Họ và tên: Nịnh Thanh Khương
+MSSV: DTC235180104
+Lớp: KTPM K22B
+Bài nộp: Lab 4 — Quản lý Cấu hình Hạ tầng với Ansible
+Ngày thực hành: 02/11/2026
+Nền tảng: macOS ARM64; Docker Desktop; Ansible control node

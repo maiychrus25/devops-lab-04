@@ -1,0 +1,54 @@
+---
+- name: Configure application hosts
+  hosts: production
+  become: true
+
+  tasks:
+    - name: Install common packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - git
+          - htop
+          - vim
+        state: present
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: /opt/myapp
+        state: directory
+        mode: '0755'
+
+    - name: Deploy application config
+      ansible.builtin.copy:
+        content: |
+          APP_NAME=DevOpsLab4
+          APP_ENV=production
+          APP_PORT=8080
+        dest: /opt/myapp/config.env
+        mode: '0644'
+
+    - name: Create health check script
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          set -euo pipefail
+          echo "=== Health Check: $(date) ==="
+          echo "Hostname: $(hostname)"
+          echo "Uptime: $(uptime)"
+          echo "Disk: $(df -h / | tail -1)"
+          echo "Memory: $(free -m | grep Mem)"
+        dest: /opt/myapp/health-check.sh
+        mode: '0755'
+
+- name: Setup Monitoring Agents
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install monitoring tools
+      ansible.builtin.apt:
+        name:
+          - sysstat
+          - net-tools
+        state: present

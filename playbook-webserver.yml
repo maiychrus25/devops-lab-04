@@ -1,0 +1,63 @@
+---
+- name: Configure Web Servers
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    web_package: apache2
+    web_service: apache2
+    web_root: /var/www/html
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install Apache web server
+      ansible.builtin.apt:
+        name: "{{ web_package }}"
+        state: present
+      register: web_install
+
+    - name: Ensure Apache is running and enabled
+      ansible.builtin.service:
+        name: "{{ web_service }}"
+        state: started
+        enabled: true
+      when: not ansible_check_mode or not web_install.changed
+
+    - name: Create custom index.html
+      ansible.builtin.copy:
+        content: |
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <title>DevOps Lab 4</title>
+            <style>
+              :root { color-scheme: light dark; --ink: #172a3a; --surface: #f6f8fa; }
+              @media (prefers-color-scheme: dark) { :root { --ink: #e5e7eb; --surface: #0f172a; } }
+              body { margin: 0; font: 1rem/1.6 system-ui; color: var(--ink); background: var(--surface); }
+              main { max-width: 48rem; margin: auto; padding: 24px; overflow-wrap: anywhere; }
+              h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.25; }
+              section { padding: 24px; border: 1px solid currentColor; border-radius: 8px; }
+            </style>
+          </head>
+          <body><main>
+            <h1>🚀 DevOps Lab 4 — Ansible Managed!</h1>
+            <section aria-label="Server facts">
+              <p>Server: {{ ansible_facts.hostname | e }}</p>
+              <p>OS: {{ ansible_facts.distribution | e }} {{ ansible_facts.distribution_version | e }}</p>
+              <p>IP: {{ ansible_host | e }}</p>
+              <p>Managed by: <strong>Ansible Playbook</strong></p>
+            </section>
+          </main></body>
+          </html>
+        dest: "{{ web_root }}/index.html"
+        owner: root
+        group: root
+        mode: '0644'
+      when: not ansible_check_mode or not web_install.changed
